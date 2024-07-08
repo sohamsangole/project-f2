@@ -3,6 +3,7 @@ import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:project_f2/chatpage/chatpage.dart';
 import 'package:project_f2/foryoupage/fyp.dart';
 import 'package:project_f2/mytoppage/mytoppage.dart';
+import 'package:project_f2/profile/profilepage.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,6 +19,7 @@ class _HomePageState extends State<HomePage> {
     ForYouPage(),
     ChatPage(),
     MyTopMusic(),
+    ProfilePage(),
   ];
 
   @override
@@ -92,6 +94,17 @@ class _HomePageState extends State<HomePage> {
                       onPressed: () {
                         setState(() {
                           _selectedIndex = 2;
+                        });
+                      },
+                    ),
+                    GButton(
+                      icon: _selectedIndex == 3
+                          ? Icons.person
+                          : Icons.person_outlined,
+                      iconColor: Colors.white,
+                      onPressed: () {
+                        setState(() {
+                          _selectedIndex = 3;
                         });
                       },
                     ),

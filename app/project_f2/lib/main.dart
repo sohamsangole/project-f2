@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:project_f2/homepage/homepage.dart';
+import 'package:project_f2/login/login.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,7 +15,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'f2',
       theme: ThemeData(
-        colorScheme: ColorScheme.dark(),
+        colorScheme: const ColorScheme.dark(),
         textTheme: const TextTheme(
           bodyLarge: TextStyle(
             color: Colors.white,

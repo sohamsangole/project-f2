@@ -1,8 +1,8 @@
 import asyncio
 import requests
-import subprocess
-subprocess.call('chcp 65001 > nul', shell=True)
-token = 'BQAOE1oj4EY8Idung4yb0DxcTmSf3F8bmN3HEN1dhNtqQOLBaatIajZmsbqTYXKfsAidOk0Y04Jq5vKwVv7Du5x_VLd_14JKyRo3gLvr833BdsFGV4AvQ-kPp7wH_zqdLtKKKi4JJYmogtTu25_Q4PFdOeHTAjrzOp3ZCo_IYthgbWToYNS9HEe6plcXoj6R83WWKGd5V1YZCqKXwlzsoy8lJS8SnIciTUMl8e6DHYuMdAL7DfeP0ApCmsJyItuMU9Fp6dpe01hk1VvKqJOfeNDxndXI'
+
+# Your Spotify access token
+token = 'BQAyoLr75iohXYAee2yU067Tfsed8xIsOiMjHNzh3kSd03Kclm5_I1LdDCMiklQ1hjOKwVNhluHIDzuW_APX-c1rWBJPOhLNsmNRj-I3P0bnJdM8LnSdd7IwSkD1w_S9T-xk61Wzjrob9bR_ZMsojq5Kmv9EHQ4HK0VG1yWrPucQ1d1g2L23rIgwKQIcoIQgGR3uyTR8jm3tCZJLIER8db8gOH_5EfokKriO35N6iTLyTwqNEd_7PBXa16FVR8KQCMRUC10xKbwNfTwoKSEv-ukYZJN9'
 
 async def fetch_web_api(endpoint, method='GET', body=None):
     url = f'https://api.spotify.com/{endpoint}'
@@ -27,17 +27,30 @@ async def get_top_tracks():
     endpoint = 'v1/me/top/tracks?time_range=long_term&limit=5'
     return await fetch_web_api(endpoint, 'GET')
 
+async def get_profile():
+    endpoint = 'v1/me'
+    return await fetch_web_api(endpoint, 'GET')
+
 async def main():
     # Call the async function and await its result
     top_tracks = await get_top_tracks()
+    profile = await get_profile()
+
+    # Display profile information
+    if profile:
+        print(f"User Profile:")
+        print(f"ID: {profile.get('id')}")
+        print(f"Display Name: {profile.get('display_name')}")
+        print(f"Email: {profile.get('email')}")
+        print(f"Country: {profile.get('country')}\n")
 
     # Display the results
     if top_tracks and 'items' in top_tracks:
+        print("Top Tracks:")
         for idx, track in enumerate(top_tracks['items'], start=1):
             track_name = track['name']
             artists = ', '.join([artist['name'] for artist in track['artists']])
-            # Print using UTF-8 encoding explicitly
-            print(f"{idx}. {track_name} by {artists.encode('utf-8').decode('utf-8')}")
+            print(f"{idx}. {track_name} by {artists}")
     else:
         print("No top tracks found.")
 
