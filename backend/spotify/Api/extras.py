@@ -1,6 +1,6 @@
 from requests import get, post
 
-from spotify.Api.credentials import CLIENT_ID, CLIENT_SECRET
+from .credentials import CLIENT_ID, CLIENT_SECRET
 from .models import Token
 from django.utils import timezone
 from datetime import timedelta
@@ -68,10 +68,11 @@ def refresh_token_func(session_id):
     )
 
 def spotify_requests_execution(session_id,endpoint):
-    token = check_tokens(token)
+    token = check_tokens(session_id=session_id)
+    print("Session ID",session_id)
     headers = {'Content-Type' : 'application/json','Authorization' : 'Bearer ' + token.access_token }
     response = get(BASE_URL + endpoint,{},headers = headers)
-
+    print(BASE_URL + endpoint)
     if response:
         print(response)
 
@@ -79,7 +80,12 @@ def spotify_requests_execution(session_id,endpoint):
         print("No Response!")
 
 
-    try:
-        return response.json()
-    except:
-        return{'Error' : 'Issue with Request'}
+    if response.status_code == 200:
+        try:
+            return response.json()
+        except ValueError as e:
+            print(f"Error decoding JSON: {str(e)}")
+            return {'error': 'Invalid JSON response from Spotify API'}
+    else:
+        print(f"Request failed: {response.status_code} - {response.text}")
+        return {'error': f'Request failed: {response.status_code} - {response.reason}'}

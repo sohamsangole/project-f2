@@ -1,22 +1,50 @@
+import 'dart:convert';
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
+import 'package:project_f2/api.dart';
 import 'package:project_f2/components/largetext.dart';
 import 'package:project_f2/components/mediumtext.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  final String sessionId;
+  final String baseUrl;
+  const ProfilePage(
+      {super.key, required this.sessionId, required this.baseUrl});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  final ApiService apiService = ApiService();
+  Map<String, dynamic> currentSong = {};
   final List<LibraryItem> libraryItems = [
     LibraryItem(title: "Playlists"),
     LibraryItem(title: "Artists"),
     LibraryItem(title: "Friends"),
   ];
+  @override
+  void initState() {
+    super.initState();
+    fetchCurrentSong(); // Fetch current song data when the page initializes
+  }
+
+  // Function to fetch current song
+  void fetchCurrentSong() async {
+    try {
+      // Make API call to fetch current song
+      Map<String, dynamic> songData =
+          await apiService.getCurrentSong(widget.baseUrl, widget.sessionId);
+      songData['title'] = utf8.decode(songData['title'].codeUnits);
+      setState(() {
+        currentSong = songData;
+      });
+      print(currentSong);
+    } catch (e) {
+      // Handle error gracefully
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,9 +56,7 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             const LargeText(data: "ryo.ham"),
             GestureDetector(
-              onTap: () {
-                print('Icon tapped');
-              },
+              onTap: () {},
               child: const Icon(Icons.settings),
             ),
           ],
@@ -73,11 +99,14 @@ class _ProfilePageState extends State<ProfilePage> {
               const SizedBox(height: 6),
               Container(
                 width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.width / 2,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  image: const DecorationImage(
-                    image: AssetImage("assets/temp/songcover.jpeg"),
+                  image: DecorationImage(
+                    image: currentSong['album_cover'] != null
+                        ? NetworkImage(currentSong['album_cover'])
+                        : const AssetImage('assets/temp/songcover.jpeg')
+                            as ImageProvider,
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -86,12 +115,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 2.5, sigmaY: 2.5),
+                        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
                         child: Container(
                           decoration: BoxDecoration(
                             gradient: RadialGradient(
                               center: Alignment.center,
-                              radius: 0.5,
+                              focalRadius: 100,
+                              radius: 1,
                               colors: [
                                 const Color(0xff121212).withOpacity(1),
                                 Colors.transparent,
@@ -101,24 +131,27 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                     ),
-                    const Center(
+                    Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            "Shitsu Koi",
-                            style: TextStyle(
+                            currentSong.containsKey('title')
+                                ? currentSong['title']
+                                : "No song playing",
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
-                            "TakaseToya",
-                            style: TextStyle(
+                            currentSong.containsKey('artist')
+                                ? currentSong['artist']
+                                : "",
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 12,
-                              fontWeight: FontWeight.w300,
                             ),
                           ),
                         ],

@@ -1,4 +1,5 @@
 from django.shortcuts import render
+import requests
 from rest_framework.views import APIView
 from rest_framework import status,response
 from requests import Request,post
@@ -9,7 +10,7 @@ from .extras import *
 # Create your views here.
 class AuthenticationURL(APIView):
     def get(self,request,format=None):
-        scopes = "user-read-currently-playing user-read-playback-state user-modify-playback-state"
+        scopes = "user-read-email user-library-read user-library-modify playlist-read-private playlist-modify-public playlist-modify-private user-follow-read user-follow-modify user-top-read user-read-recently-played user-read-currently-playing user-read-playback-state user-modify-playback-state user-read-private user-read-email"
         url = Request("GET","https://accounts.spotify.com/authorize",params={
             'scope' : scopes,
             'response' : response,
@@ -54,9 +55,8 @@ def spotify_redirect(request,format = None):
         token_type=token_type
     )
 
-    redirect_uri = "project_f2://callback?code=" + code
-
-    return HttpResponseRedirect(redirect_uri)
+    redirect_url = f"http://127.0.0.1:8000/spotify/current-song?key={authkey}"
+    return HttpResponseRedirect(redirect_url)
 
 class CheckAuthentication(APIView):
     def get(self,request,format=None):
@@ -67,7 +67,7 @@ class CheckAuthentication(APIView):
 
         auth_status = is_spotify_authenticated(key)
 
-        redirect_uri = "your_app://authenticated" if auth_status else "your_app://not_authenticated"
+        redirect_uri = f"http://127.0.0.1:8000/spotify/top-tracks?key={key}" if auth_status else f"http://127.0.0.1:8000/spotify/auth-url"
         return HttpResponseRedirect(redirect_uri)
         
 class CurrentSong(APIView):
@@ -75,7 +75,6 @@ class CurrentSong(APIView):
     def get(self,request,format=None):
         key = request.GET.get(self.kwarg)
         token = Token.objects.filter(user = key)
-        print(token)
 
         endpoint = "player/currently-playing"
         response = spotify_requests_execution(key,endpoint)
@@ -110,3 +109,95 @@ class CurrentSong(APIView):
         }
         print(song)
         return Response(song,status=status.HTTP_200_OK)
+    
+
+class TopTracksLong(APIView):
+    kwarg = "key"
+    def get(self, request, format=None):
+        key = request.GET.get(self.kwarg)
+        if not key:
+            return Response({'error': 'Key parameter missing'}, status=status.HTTP_400_BAD_REQUEST)
+        print(key)
+        token = Token.objects.filter(user = key)
+        if not token:
+            return Response({'error': 'Invalid session key'}, status=status.HTTP_400_BAD_REQUEST)
+        print(token)
+        endpoint = 'top/tracks?time_range=long_term&limit=5'
+        response = spotify_requests_execution(key, endpoint)
+        if 'error' in response or response is None:    
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        top_tracks = response.get('items', [])
+            
+        tracks_data = []
+        for track in top_tracks:
+            track_info = {
+                    "id": track.get("id"),
+                    "name": track.get("name"),
+                    "artists": ", ".join([artist.get("name") for artist in track.get("artists")]),
+                    "album": track.get("album").get("name"),
+                    "album_cover": track.get("album").get("images")[0].get("url") if track.get("album").get("images") else None
+            }
+            tracks_data.append(track_info)
+            
+        return Response(tracks_data, status=status.HTTP_200_OK)
+    
+
+class TopTracksMedium(APIView):
+    kwarg = "key"
+    def get(self, request, format=None):
+        key = request.GET.get(self.kwarg)
+        if not key:
+            return Response({'error': 'Key parameter missing'}, status=status.HTTP_400_BAD_REQUEST)
+        print(key)
+        token = Token.objects.filter(user = key)
+        if not token:
+            return Response({'error': 'Invalid session key'}, status=status.HTTP_400_BAD_REQUEST)
+        print(token)
+        endpoint = 'top/tracks?time_range=medium_term&limit=5'
+        response = spotify_requests_execution(key, endpoint)
+        if 'error' in response or response is None:    
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        top_tracks = response.get('items', [])
+            
+        tracks_data = []
+        for track in top_tracks:
+            track_info = {
+                    "id": track.get("id"),
+                    "name": track.get("name"),
+                    "artists": ", ".join([artist.get("name") for artist in track.get("artists")]),
+                    "album": track.get("album").get("name"),
+                    "album_cover": track.get("album").get("images")[0].get("url") if track.get("album").get("images") else None
+            }
+            tracks_data.append(track_info)
+            
+        return Response(tracks_data, status=status.HTTP_200_OK)
+    
+class TopTracksShort(APIView):
+    kwarg = "key"
+    def get(self, request, format=None):
+        key = request.GET.get(self.kwarg)
+        if not key:
+            return Response({'error': 'Key parameter missing'}, status=status.HTTP_400_BAD_REQUEST)
+        print(key)
+        token = Token.objects.filter(user = key)
+        if not token:
+            return Response({'error': 'Invalid session key'}, status=status.HTTP_400_BAD_REQUEST)
+        print(token)
+        endpoint = 'top/tracks?time_range=short_term&limit=5'
+        response = spotify_requests_execution(key, endpoint)
+        if 'error' in response or response is None:    
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        top_tracks = response.get('items', [])
+            
+        tracks_data = []
+        for track in top_tracks:
+            track_info = {
+                    "id": track.get("id"),
+                    "name": track.get("name"),
+                    "artists": ", ".join([artist.get("name") for artist in track.get("artists")]),
+                    "album": track.get("album").get("name"),
+                    "album_cover": track.get("album").get("images")[0].get("url") if track.get("album").get("images") else None
+            }
+            tracks_data.append(track_info)
+            
+        return Response(tracks_data, status=status.HTTP_200_OK)

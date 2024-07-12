@@ -6,7 +6,10 @@ import 'package:project_f2/mytoppage/mytoppage.dart';
 import 'package:project_f2/profile/profilepage.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final String sessionId;
+  final String baseUrl;
+
+  const HomePage({super.key, required this.sessionId, required this.baseUrl});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -14,13 +17,23 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
-
-  final List<Widget> _pages = [
-    ForYouPage(),
-    ChatPage(),
-    MyTopMusic(),
-    ProfilePage(),
-  ];
+  late List<Widget> _pages = [];
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      const ForYouPage(),
+      const ChatPage(),
+      MyTopMusic(
+        sessionId: widget.sessionId,
+        baseUrl: widget.baseUrl,
+      ),
+      ProfilePage(
+        sessionId: widget.sessionId,
+        baseUrl: widget.baseUrl,
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
